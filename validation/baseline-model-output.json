@@ -1,0 +1,56 @@
+{
+  "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+  "runtime": "WebLLM",
+  "date": "2026-10-26T21:03:46.905Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "results": [
+    {
+      "question": "Did A.V. leave the station forever?",
+      "expected": "returns",
+      "actual": "unknown",
+      "pass": false,
+      "seconds": 29.888199999999255,
+      "raw": {
+        "status": "unknown",
+        "connectionId": "identity",
+        "evidenceIds": []
+      }
+    },
+    {
+      "question": "It looks like the keeper came back each winter.",
+      "expected": "returns",
+      "actual": "unknown",
+      "pass": false,
+      "seconds": 11.380199999999254,
+      "raw": {
+        "status": "unknown",
+        "connectionId": null,
+        "evidenceIds": []
+      }
+    },
+    {
+      "question": "Was that a return journey rather than a final departure?",
+      "expected": "returns",
+      "actual": "unknown",
+      "pass": false,
+      "seconds": 11.422699999999255,
+      "raw": {
+        "status": "unknown",
+        "connectionId": null,
+        "evidenceIds": []
+      }
+    },
+    {
+      "question": "The register and ticket contradict the abandonment label.",
+      "expected": "returns",
+      "actual": "unknown",
+      "pass": false,
+      "seconds": 11.681800000000745,
+      "raw": {
+        "status": "unknown",
+        "connectionId": null,
+        "evidenceIds": []
+      }
+    }
+  ]
+}
