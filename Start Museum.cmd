@@ -14,6 +14,12 @@ if not exist node_modules (
     exit /b 1
   )
 )
+echo Preparing the stable museum build...
+call npm.cmd run build
+if errorlevel 1 (
+  pause
+  exit /b 1
+)
 echo Opening Greyhaven Museum. Keep this window open while playing.
-call npm.cmd run dev -- --open
+call npm.cmd run preview -- --open
 pause

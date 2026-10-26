@@ -35,11 +35,18 @@ The Qwen-only 53.3% result is preserved in `validation/qwen-only-evaluation.json
 
 The silent, captioned walkthrough was recorded from the actual museum canvas. Its 1280×720 resolution, complete ending and repaired 120-second duration were verified in the browser. It is labeled authored throughout and does not claim to demonstrate live AI inference.
 
+## Deployment and in-game checks
+
+The owner-only private deployment succeeded and was opened in the browser. Its initial museum, exploration controls, settings and included recorded walkthrough were inspected. The deployed video reported a 120-second duration and 1280×720 resolution. The deployed foreground intro and exploration views each reported 60 FPS in the interface's short averaging window; this is not a long-session performance benchmark.
+
+The real archivist was also tested through the actual game interface on the cached local production origin. It identified Ada from the initials, displayed both original supporting records, and declined an unsupported childhood-instrument question. Those two responses took approximately 1.1 and 4.8 seconds respectively. The private origin's initial model download was not repeated; the model benchmark and in-game inference checks were performed locally with the same worker build.
+
+The Windows launcher now builds and opens production preview rather than the development server, avoiding development dependency-optimization reloads during the initial model load.
+
 ## Outstanding acceptance criteria
 
-- Foreground exploration at 30 FPS. Response times met the ten-second target in the recorded 44-case run, under the documented conditions.
+- A prolonged exploration performance run. Foreground samples reported 60 FPS, and response times met the ten-second target in the recorded 44-case run, under the documented conditions.
 - A complete reload, model load, question and investigation with external networking disconnected, on the exact deployment.
 - Three fresh-player sessions and the 25–35 minute story duration.
-- Private deployment visual review (to be completed during handoff).
 
 The application includes the implementation and test tools for these checks. Pending checks are not claimed as passed.

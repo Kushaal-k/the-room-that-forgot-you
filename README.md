@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open the printed localhost address. For the production build with offline caching:
+Open the printed localhost address. The Windows launcher builds and opens the stable production preview automatically. For the same production build with offline caching from a terminal:
 
 ```sh
 npm run build
