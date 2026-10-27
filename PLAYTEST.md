@@ -16,6 +16,8 @@ Use a fresh browser profile or the explicit new-investigation control. For real-
 | Model loaded / manual investigation | Pending | Pending | Pending |
 | Movement, flashlight and E understood without coaching | Pending | Pending | Pending |
 | Time to first collected fragment | Pending | Pending | Pending |
+| Mouse look works after first inspection and closing pause | Pending | Pending | Pending |
+| Steady flashlight / footprints understood without coaching | Pending | Pending | Pending |
 | Time to first confirmed connection | Pending | Pending | Pending |
 | Total story time, excluding initial model load | Pending | Pending | Pending |
 | Places that required help | Pending | Pending | Pending |

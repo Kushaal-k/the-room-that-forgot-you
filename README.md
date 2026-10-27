@@ -31,7 +31,7 @@ Use the production preview at `http://127.0.0.1:4173/` for model evaluation and 
 
 ## Investigate
 
-- **W A S D** or **↑ ↓**: move. **← →**: turn. Click the hall to look with the mouse; **Esc** releases it and opens the pause menu.
+- **W A S D** or **↑ ↓**: move. Hold **Shift** to hurry. **← →**: turn. Click the hall to look with the mouse; **Esc** releases it and opens the pause menu. Closing an inspection or menu requests mouse capture again. If the browser declines, click anywhere in the hall to resume, or hold the left button and drag to look. Drag look uses absolute pointer positions and does not require capture permission.
 - **F** toggles the flashlight. Approach an object, face it, and press **E** (or click the contextual prompt) to inspect it. Furniture and displays block movement.
 - **Keep record** adds the object to your field notes. A short observation appears first; **Read the complete record** opens the original transcript.
 - **J** opens collected records and the connection board. Unexamined exhibits must be found in the hall.
@@ -39,7 +39,8 @@ Use the production preview at `http://127.0.0.1:4173/` for model evaluation and 
 - In **Make a connection**, choose a question and independently supporting records, then test it. Wrong theories do not remove progress.
 - Three connections unlock the door at the far end. Approach it and press **E** to enter the next gallery; the final door leads to the workroom.
 - The exploration HUD is minimal. Controls fade after the first few seconds; pause provides a complete controls guide. Captions appear only with environmental events.
-- Footsteps, directional creaks, distant knocks, slow light dips, and brief silhouettes build suspense. Restoration brings warmth back. Reduced motion disables the light dips, silhouettes, camera bob, and moving rain/dust.
+- A presence approaches from blind spots and reacts to new discoveries. Hold the flashlight steadily on it for about 1.25 seconds to drive it back. Doing so briefly reveals wet footprints near an unexamined exhibit. Close encounters create a short cold veil; records and connections remain intact. Inspection and pause menus suspend the encounter. Restored galleries become quiet.
+- Footsteps and low directional sounds indicate the approach. Reduced motion removes decorative light dips, camera bob, limb sway, and moving rain/dust, and slows the presence. The essential flashlight interaction remains available.
 - Pause settings include volume, reduced motion, captions and mouse sensitivity. Progress saves in IndexedDB on this browser and origin. Save writes are ordered; a failed initial read cannot silently overwrite existing progress.
 
 ## What the AI actually does

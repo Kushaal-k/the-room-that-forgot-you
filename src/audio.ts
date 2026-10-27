@@ -27,6 +27,23 @@ export class MuseumAudio {
     this.tone(this.step % 2 ? 72 : 66, 0, .14, .25);
     this.tone(190, .015, .045, .035);
   }
+  presence(side: number) {
+    this.creak(side);
+    this.tone(51, 0, 2.7, .18);
+    this.tone(53, .15, 2.4, .12);
+  }
+  recede() { this.tone(174, 0, 1.2, .11); this.tone(220, .18, 1.4, .08); }
+  phantomStep(side: number) {
+    if (!this.context || !this.gain) return;
+    const context = this.context, now = context.currentTime;
+    const source = context.createOscillator(), envelope = context.createGain(), pan = context.createStereoPanner();
+    source.frequency.setValueAtTime(112, now); source.frequency.exponentialRampToValueAtTime(45, now + .14);
+    envelope.gain.setValueAtTime(.001, now); envelope.gain.exponentialRampToValueAtTime(.33, now + .008);
+    envelope.gain.exponentialRampToValueAtTime(.001, now + .18); pan.pan.value = side;
+    source.connect(envelope); envelope.connect(pan); pan.connect(this.gain);
+    source.start(now); source.stop(now + .2);
+    source.onended = () => { source.disconnect(); envelope.disconnect(); pan.disconnect(); };
+  }
   creak(side: number) {
     if (!this.context || !this.gain) return;
     const context = this.context, now = context.currentTime;

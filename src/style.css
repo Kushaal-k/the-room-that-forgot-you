@@ -60,3 +60,6 @@
 @media(max-width:600px){.title-screen{padding:32px}.title-location{font-size:8px;letter-spacing:2px;margin-bottom:24px}.title-screen h1{font-size:clamp(49px,10.2vw,66px);letter-spacing:-1.2px}.title-screen>p{font-size:12px;margin-top:22px;max-width:260px}.title-actions{margin-top:30px;gap:24px}.title-play{padding:14px 18px;gap:20px;font-size:10px}.title-options{font-size:10px}}
 @media(max-height:500px){.title-screen{padding:25px 7%}.title-location{margin-bottom:16px}.title-screen h1{font-size:50px}.title-screen>p{margin-top:14px}.title-actions{margin-top:20px}}
 .mouse-look-surface{position:absolute;inset:0;z-index:4;cursor:grab;touch-action:none;outline:0!important}.mouse-look-surface:active{cursor:grabbing}.mouse-resume-hint{position:absolute;left:50%;bottom:25px;transform:translateX(-50%);font-size:10px;letter-spacing:.35px;color:#b4bdad;pointer-events:none;text-shadow:0 1px 5px #000;z-index:6}.mouse-look-surface:focus-visible{box-shadow:inset 0 0 0 1px #b9ad8155}
+.cold-veil{position:absolute;inset:0;z-index:6;pointer-events:none;background:radial-gradient(ellipse,transparent 12%,#041112ba 75%,#010807ed);box-shadow:inset 0 0 120px #a1bab133;animation:cold-passing 1.4s both}
+@keyframes cold-passing{0%,100%{opacity:0}22%,55%{opacity:1}}
+.reduced-motion .cold-veil{animation:none;opacity:.55}

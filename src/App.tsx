@@ -60,6 +60,7 @@ export default function App() {
     const [toast, setToast] = useState('');
     const [flashlight, setFlashlight] = useState(true);
     const [mouseCaptured, setMouseCaptured] = useState(false);
+    const [coldVeil, setColdVeil] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [interaction, setInteraction] = useState<Interaction | null>(null);
     const [environmentCaption, setEnvironmentCaption] = useState('');
@@ -291,8 +292,12 @@ export default function App() {
     const notifyInteraction = useCallback((next: Interaction | null) => setInteraction(next), []);
     const notifyFootstep = useCallback(() => audio.current?.footstep(), []);
     const notifyHaunt = useCallback((event: Haunt) => {
-        setEnvironmentCaption(event.caption);
-        if (event.sound === 'creak') audio.current?.creak(event.side);
+        if (event.caption) setEnvironmentCaption(event.caption);
+        if (event.veil) setColdVeil(true);
+        if (event.sound === 'presence') audio.current?.presence(event.side);
+        else if (event.sound === 'recede') audio.current?.recede();
+        else if (event.sound === 'footstep') audio.current?.phantomStep(event.side);
+        else if (event.sound === 'creak') audio.current?.creak(event.side);
         else audio.current?.knocks(saveRef.current.confirmed.includes('knocks'));
     }, []);
     useEffect(() => {
@@ -300,6 +305,7 @@ export default function App() {
         const timer = window.setTimeout(() => setEnvironmentCaption(''), 3800);
         return () => window.clearTimeout(timer);
     }, [environmentCaption]);
+    useEffect(() => { if (!coldVeil) return; const timer = window.setTimeout(() => setColdVeil(false), 1400); return () => window.clearTimeout(timer); }, [coldVeil]);
     const enterDoor = useCallback(() => {
         const state = saveRef.current;
         if (!isGalleryRestored(state.gallery, state.confirmed)) {
@@ -340,9 +346,10 @@ export default function App() {
       {updateReady && <button className="title-update" onClick={() => void installUpdate()}>Update ready · save & reload</button>}
     </section>}
     {mode === 'play' && <>
+      {coldVeil && <div className="cold-veil" aria-hidden="true"/>}
       {!panel && !inspected && !mouseCaptured && <>
         <button className="mouse-look-surface" data-mouse-look aria-label="Resume mouse look"
-          onPointerDown={event => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); }}
+          onPointerDown={event => { try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* Window listeners still support dragging. */ } }}
           onClick={() => void resumeMouseLook()}/>
         <span className="mouse-resume-hint">Click to look · or hold and drag</span>
       </>}
@@ -350,7 +357,7 @@ export default function App() {
       <div className={`crosshair ${interaction ? 'has-target' : ''}`} aria-hidden="true"/>
       {!panel && !inspected && interaction && <button className="interact-prompt" onClick={() => interaction.kind === 'door' ? enterDoor() : inspect(interaction.id)}><kbd>E</kbd><span>{interaction.kind === 'evidence' ? 'Inspect' : interaction.label}</span>{interaction.kind === 'evidence' && <small>{interaction.label}</small>}</button>}
       {!panel && !inspected && <>
-        {showControls && <div className="game-controls-hint"><span>W A S D <small>move</small></span><span>Mouse <small>look</small></span><span>E <small>interact</small></span><span>F <small>light</small></span><span>J <small>notes</small></span><span>Esc <small>pause</small></span></div>}
+        {showControls && <div className="game-controls-hint"><span>W A S D <small>move</small></span><span>Shift <small>hurry</small></span><span>Mouse <small>look</small></span><span>E <small>interact</small></span><span>F <small>light</small></span><span>J <small>notes</small></span><span>Esc <small>pause</small></span></div>}
         <button className="pause-button" onClick={() => setPanel('settings')} aria-label="Pause game" title="Pause · Esc"><Pause size={16}/></button>
         <div className="pocket-tools" aria-label="Equipment">
           <button onClick={() => setFlashlight(value => !value)} aria-label={flashlight ? 'Switch flashlight off' : 'Switch flashlight on'} aria-pressed={flashlight} title="Flashlight · F"><span className="flashlight-symbol">◉</span></button>
@@ -392,7 +399,7 @@ export default function App() {
       </nav>
     </Dialog>}
     {panel === 'about' && <Dialog title="The story" onClose={closePanel}><div className="about"><Mark /><span className="eyebrow">WHY WE KEEP THE LIGHT ON</span><h2>Some lives never<br />make it onto a plaque.</h2><p>Greyhaven is a fictional museum built around a very real question: who disappears when we only preserve the official version?</p><p>Follow eighteen fragments through three changing galleries. Ask an archivist what the surviving records mean. Restore the name of someone whose ordinary work held a community together.</p><div className="about-rule"/><h3>Open words. On your own machine.</h3><p>The optional live archivist uses two Apache-2.0 open-weight models: MiniLM through Transformers.js for semantic retrieval and Qwen2.5 through WebLLM for ambiguous questions. Code checks every proposed connection. No remote inference, account, or API key.</p><p>After the initial downloads, the app and model are designed to work from browser caches. Offline availability depends on those resources remaining stored. Browser and graphics support vary.</p><p className="about-disclosure">The walkthrough is an authored demonstration, with AI inactive. The 25–35 minute duration is a design target pending fresh-player testing.</p><button className="primary full" onClick={begin}>Step inside <ArrowRight size={17}/></button></div></Dialog>}
-    {panel === 'help' && <Dialog title="How to investigate" onClose={closePanel}><span className="eyebrow">YOUR FIRST VISIT</span><h2>Survive the silence.</h2><ol className="help-steps"><li><strong>Look closely.</strong> Move with W A S D or ↑ ↓. Click empty space to look with the mouse; Esc releases it. ← → also turn.</li><li><strong>Keep a record.</strong> Approach an object and press E to inspect it. F toggles your flashlight. Keep the fragment so it enters your field notes.</li><li><strong>Ask a question.</strong> Press R to wake the local archivist. It only sees evidence you have found.</li><li><strong>Connect the fragments.</strong> Press J, choose “Make a connection,” and select supporting records. Nothing is lost if a theory is wrong.</li><li><strong>Watch the room remember.</strong> Three connections unlock the door at the far end. Approach it and press E to continue.</li></ol><p className="muted">W A S D moves; ← → turns without a mouse. E inspects nearby objects. Your journal holds collected records. Esc pauses.</p><button className="primary full" onClick={closePanel}>I’ll look closely <ArrowRight size={16}/></button></Dialog>}
+    {panel === 'help' && <Dialog title="How to investigate" onClose={closePanel}><span className="eyebrow">YOUR FIRST VISIT</span><h2>Survive the silence.</h2><ol className="help-steps"><li><strong>Look closely.</strong> Move with W A S D or ↑ ↓. Click empty space to look with the mouse; Esc releases it. ← → also turn.</li><li><strong>Keep a record.</strong> Approach an object and press E to inspect it. F toggles your flashlight. Keep the fragment so it enters your field notes.</li><li><strong>Ask a question.</strong> Press R to wake the local archivist. It only sees evidence you have found.</li><li><strong>Connect the fragments.</strong> Press J, choose “Make a connection,” and select supporting records. Nothing is lost if a theory is wrong.</li><li><strong>Watch the room remember.</strong> Three connections unlock the door at the far end. Approach it and press E to continue.</li></ol><p className="muted">W A S D moves; Shift hurries; ← → turns without a mouse. E inspects nearby objects. Hold your flashlight steadily on the presence to drive it back and reveal a brief trail. Your journal holds collected records. Esc pauses.</p><button className="primary full" onClick={closePanel}>I’ll look closely <ArrowRight size={16}/></button></Dialog>}
     {panel === 'settings' && <Dialog title="Settings" onClose={closePanel}><span className="eyebrow">GREYHAVEN / PAUSED</span><h2>Take a breath.</h2><div className="settings-list"><label><span><Volume2 size={16}/> Atmosphere volume</span><input type="range" min="0" max="1" step=".05" value={save.settings.volume} onChange={e => { startAudio(); setSave(s => ({ ...s, settings: { ...s.settings, volume: Number(e.target.value) } })); }}/></label><label><span>Reduced motion</span><input type="checkbox" checked={save.settings.reducedMotion} onChange={e => setSave(s => ({ ...s, settings: { ...s.settings, reducedMotion: e.target.checked } }))}/></label><label><span>Environmental captions</span><input type="checkbox" checked={save.settings.captions} onChange={e => setSave(s => ({ ...s, settings: { ...s.settings, captions: e.target.checked } }))}/></label><label><span>Mouse sensitivity</span><input type="range" min=".2" max="2" step=".1" value={save.settings.sensitivity} onChange={e => setSave(s => ({ ...s, settings: { ...s.settings, sensitivity: Number(e.target.value) } }))}/></label></div><p className="pause-save-status">{saveError ? 'Progress could not be saved.' : saving ? 'Saving…' : !loaded ? 'Reading progress…' : 'Progress saved on this device.'}</p><div className="settings-actions">{updateReady && <button className="secondary full" onClick={() => void installUpdate()}>Save & install game update</button>}<button className="primary full" onClick={closePanel}>Return to the room <ArrowRight size={16}/></button><button className="secondary full" onClick={() => setPanel('help')}>Controls & investigation</button><button className="text-button" onClick={returnHome}>Return to title</button><details className="extras-details"><summary>Extras & technical information</summary><p className="muted">{fps} FPS · {modelStatus === 'ready' ? 'local AI ready' : 'AI inactive'}</p><button className="text-button" onClick={startTour}><Play size={15}/> Watch recorded walkthrough</button><button className="text-button" onClick={recordTour} disabled={recording || !sceneReady}><Download size={14}/>{recording ? 'Recording two-minute walkthrough…' : 'Export walkthrough video'}</button><button className="text-button" onClick={() => document.documentElement.requestFullscreen?.().catch(() => announce('Fullscreen is unavailable here.'))}><Maximize size={14}/> Fullscreen</button></details><details className="reset-details"><summary>Start a new investigation</summary><p>This clears discoveries and connections on this device.</p><button className="danger" onClick={() => { setSave(defaultSave()); setMessages([]); setSelected([]); setCandidate('returns'); setBoardError(''); returnHome(); announce('A fresh page. The museum is waiting.'); }}>Clear progress & start again</button></details></div></Dialog>}
   </main>;
 }

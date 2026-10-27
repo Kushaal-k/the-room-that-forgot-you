@@ -110,13 +110,14 @@ function CameraRig({ exploring, blocked, reducedMotion, walkthrough, ended, sens
   const yaw = useRef(0), pitch = useRef(0), started = useRef(false), time = useRef(0);
   const walked = useRef(0), stepDistance = useRef(0);
   const focused = useRef<Interaction | null>(null);
+  const dragPoint = useRef<{ x: number; y: number } | null>(null);
   const direction = useMemo(() => new THREE.Vector3(), []);
   const forward = useMemo(() => new THREE.Vector3(), []);
   useEffect(() => {
     started.current = false; time.current = 0; keys.current.clear();
     focused.current = null; onInteractionChange(null);
   }, [exploring, gallery, walkthrough, ended, onInteractionChange]);
-  useEffect(() => { if (blocked) keys.current.clear(); }, [blocked]);
+  useEffect(() => { if (blocked) { keys.current.clear(); dragPoint.current = null; } }, [blocked]);
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
       if (!exploring || blocked || event.ctrlKey || event.metaKey || event.altKey ||
@@ -126,25 +127,42 @@ function CameraRig({ exploring, blocked, reducedMotion, walkthrough, ended, sens
         if (focused.current.kind === 'door') onEnterDoor();
         else onInspect(focused.current.id);
       }
-      if (['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.code)) {
+      if (['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','ShiftLeft','ShiftRight'].includes(event.code)) {
         event.preventDefault(); keys.current.add(event.code);
       }
     };
     const up = (event: KeyboardEvent) => keys.current.delete(event.code);
     const move = (event: MouseEvent) => {
       if (!exploring || blocked) return;
-      const delta = mouseLookDelta(document.pointerLockElement === gl.domElement, event.buttons,
-        !!(event.target as HTMLElement)?.closest('canvas, [data-mouse-look]'), event.movementX, event.movementY);
+      const delta = mouseLookDelta(document.pointerLockElement === gl.domElement, 0, false, event.movementX, event.movementY);
       if (!delta) return;
       yaw.current -= delta[0] * .0016 * sensitivity;
       pitch.current = Math.max(-.8, Math.min(.8, pitch.current - delta[1] * .0016 * sensitivity));
     };
-    const clear = () => keys.current.clear();
+    const dragStart = (event: PointerEvent) => {
+      if (exploring && !blocked && event.button === 0 && (event.target as HTMLElement)?.closest('canvas, [data-mouse-look]'))
+        dragPoint.current = { x: event.clientX, y: event.clientY };
+    };
+    const dragMove = (event: PointerEvent) => {
+      if (!dragPoint.current || blocked || document.pointerLockElement === gl.domElement) return;
+      // Absolute positions remain reliable even when a browser reports movementX=0.
+      const delta = mouseLookDelta(false, 1, true, event.clientX - dragPoint.current.x, event.clientY - dragPoint.current.y);
+      dragPoint.current = { x: event.clientX, y: event.clientY };
+      if (!delta) return;
+      yaw.current -= delta[0] * .0022 * sensitivity;
+      pitch.current = Math.max(-.8, Math.min(.8, pitch.current - delta[1] * .0022 * sensitivity));
+    };
+    const dragEnd = () => { dragPoint.current = null; };
+    const clear = () => { keys.current.clear(); dragPoint.current = null; };
     window.addEventListener('keydown', down); window.addEventListener('keyup', up);
     window.addEventListener('blur', clear); window.addEventListener('mousemove', move);
+    window.addEventListener('pointerdown', dragStart); window.addEventListener('pointermove', dragMove);
+    window.addEventListener('pointerup', dragEnd); window.addEventListener('pointercancel', dragEnd);
     return () => {
       window.removeEventListener('keydown', down); window.removeEventListener('keyup', up);
       window.removeEventListener('blur', clear); window.removeEventListener('mousemove', move);
+      window.removeEventListener('pointerdown', dragStart); window.removeEventListener('pointermove', dragMove);
+      window.removeEventListener('pointerup', dragEnd); window.removeEventListener('pointercancel', dragEnd);
     };
   }, [gl, sensitivity, exploring, blocked, onInspect, onEnterDoor]);
   useFrame((_, delta) => {
@@ -165,7 +183,7 @@ function CameraRig({ exploring, blocked, reducedMotion, walkthrough, ended, sens
     if (k.has('ArrowRight')) yaw.current -= dt * 1.4;
     const moving = Number(k.has('KeyW')||k.has('ArrowUp')) - Number(k.has('KeyS')||k.has('ArrowDown'));
     const side = Number(k.has('KeyD')) - Number(k.has('KeyA'));
-    direction.set(side,0,-moving).normalize().applyAxisAngle(THREE.Object3D.DEFAULT_UP, yaw.current).multiplyScalar(dt*2.5);
+    direction.set(side,0,-moving).normalize().applyAxisAngle(THREE.Object3D.DEFAULT_UP, yaw.current).multiplyScalar(dt*(k.has('ShiftLeft')||k.has('ShiftRight')?4:2.5));
     const previousX=camera.position.x, previousZ=camera.position.z;
     if (isWalkable(camera.position.x+direction.x,camera.position.z,gallery)) camera.position.x+=direction.x;
     if (isWalkable(camera.position.x,camera.position.z+direction.z,gallery)) camera.position.z+=direction.z;
@@ -252,12 +270,12 @@ function Hall(props: Props) {
     <Label text={GALLERIES.find(g=>g.id===gallery)!.title.toUpperCase()} position={[0,2.8,-7.1]} width={1.8}/>
     {[0,1,2].map(i=><mesh key={i} position={[-2+i*1.7,5.1,5-i*4]}><sphereGeometry args={[.09,12,8]}/><meshBasicMaterial color="#e7ce96"/></mesh>)}
     <CameraRig {...props}/>
-    <Atmosphere active={exploring&&!blocked&&!walkthrough} restored={restored||ended} reducedMotion={props.reducedMotion} flashlight={props.flashlight} gallery={gallery} onHaunt={props.onHaunt}/>
+    <Atmosphere active={exploring&&!blocked&&!walkthrough} restored={restored||ended} reducedMotion={props.reducedMotion} flashlight={props.flashlight} gallery={gallery} onHaunt={props.onHaunt} discovered={discovered} confirmedCount={confirmed.length}/>
     <FrameBudget busy={props.busy}/>
   </>;
 }
 export default function Museum(props: Props) {
-  return <Canvas className="museum-canvas" camera={{position:[3.8,3.6,10.5],fov:47,near:.1,far:55}} dpr={[1,1.5]} gl={{ antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance' }} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.32;gl.domElement.addEventListener('webglcontextlost',props.onFailure);}}>
+  return <Canvas className="museum-canvas" camera={{position:[3.8,3.6,10.5],fov:47,near:.1,far:55}} dpr={[1,1.5]} gl={{ antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance' }} onCreated={({gl})=>{gl.domElement.tabIndex=0;gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.32;gl.domElement.addEventListener('webglcontextlost',props.onFailure);}}>
     <Suspense fallback={null}><Hall {...props}/></Suspense>
   </Canvas>;
 }
