@@ -1,4 +1,4 @@
-import { CONNECTIONS, EVIDENCE, STORY_VERSION } from './story';
+import { CONNECTIONS, EVIDENCE, STORY_VERSION, isUnlocked } from './story';
 import { RELATIONS } from './retrieval';
 import type { GalleryId } from './story';
 export interface Settings { volume: number; reducedMotion: boolean; captions: boolean; sensitivity: number; }
@@ -32,8 +32,9 @@ export function sanitizeSave(raw: unknown): Save {
   const r = raw as Save;
   base.discovered = Array.isArray(r.discovered) ? [...new Set(r.discovered.filter(id => EVIDENCE.some(e => e.id === id)))] : [];
   base.confirmed = Array.isArray(r.confirmed) ? [...new Set(r.confirmed.filter(id => CONNECTIONS.some(c => c.id === id && c.requires.every(e => base.discovered.includes(e)))))] : [];
+  base.confirmed = base.confirmed.filter(id => isUnlocked(CONNECTIONS.find(c => c.id === id)!.gallery, base.confirmed));
   base.gallery = r.gallery === 'names' && ['refuge','knocks','care','returns','clock','light'].every(id => base.confirmed.includes(id)) ? 'names' : r.gallery === 'shelter' && ['returns','clock','light'].every(id => base.confirmed.includes(id)) ? 'shelter' : 'departures';
-  if (r.settings && typeof r.settings === 'object') base.settings = { volume: typeof r.settings.volume === 'number' && Number.isFinite(r.settings.volume) ? Math.max(0, Math.min(1, r.settings.volume)) : .35, reducedMotion: typeof r.settings.reducedMotion === 'boolean' ? r.settings.reducedMotion : base.settings.reducedMotion, captions: typeof r.settings.captions === 'boolean' ? r.settings.captions : true, sensitivity: typeof r.settings.sensitivity === 'number' ? Math.max(.2, Math.min(2, r.settings.sensitivity)) : 1 };
+  if (r.settings && typeof r.settings === 'object') base.settings = { volume: typeof r.settings.volume === 'number' && Number.isFinite(r.settings.volume) ? Math.max(0, Math.min(1, r.settings.volume)) : .35, reducedMotion: typeof r.settings.reducedMotion === 'boolean' ? r.settings.reducedMotion : base.settings.reducedMotion, captions: typeof r.settings.captions === 'boolean' ? r.settings.captions : true, sensitivity: typeof r.settings.sensitivity === 'number' && Number.isFinite(r.settings.sensitivity) ? Math.max(.2, Math.min(2, r.settings.sensitivity)) : 1 };
   base.finished = r.finished === true && base.confirmed.length === CONNECTIONS.length;
   return base;
 }

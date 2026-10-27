@@ -41,4 +41,4 @@ export const CONNECTIONS: Connection[] = [
 export const ENDING = { title: 'She was here.', text: 'There is no apparition waiting in the workroom. Only a chair turned towards the window. A clock keeping time for the hill. A cup, washed and ready. You leave the light on.', inscription: 'ADA VALE · KEEPER OF GREYHAVEN · 1951–1981' };
 export function galleryConnections(id: GalleryId) { return CONNECTIONS.filter(c => c.gallery === id); }
 export function isGalleryRestored(id: GalleryId, confirmed: string[]) { return galleryConnections(id).every(c => confirmed.includes(c.id)); }
-export function isUnlocked(id: GalleryId, confirmed: string[]) { const index = GALLERIES.findIndex(g => g.id === id); return index === 0 || isGalleryRestored(GALLERIES[index - 1].id, confirmed); }
+export function isUnlocked(id: GalleryId, confirmed: string[]) { const index = GALLERIES.findIndex(g => g.id === id); return index >= 0 && GALLERIES.slice(0, index).every(g => isGalleryRestored(g.id, confirmed)); }

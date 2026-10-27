@@ -31,5 +31,14 @@ describe('an investigation that cannot be advanced by invented evidence',()=>{
     expect(forged.discovered).toEqual(['d1']);expect(forged.confirmed).toEqual([]);expect(forged.gallery).toBe('departures');expect(forged.finished).toBe(false);expect(forged.settings.volume).toBe(1);expect(forged.settings.captions).toBe(true);
   });
   it('fails safely when a saved format is unknown',()=>{expect(sanitizeSave({version:999,discovered:['d1']})).toEqual(defaultSave());});
+  it('rejects later-gallery progress until every preceding gallery is restored',()=>{
+    const future=sanitizeSave({...defaultSave(),discovered:EVIDENCE.map(e=>e.id),confirmed:['refuge','knocks','care','identity','credit','workroom'],gallery:'names'});
+    expect(future.confirmed).toEqual([]);
+    expect(future.gallery).toBe('departures');
+    expect(isUnlocked('names',['refuge','knocks','care'])).toBe(false);
+  });
+  it('recovers usable mouse controls from non-finite saved settings',()=>{
+    for(const sensitivity of [NaN,Infinity,-Infinity])expect(sanitizeSave({...defaultSave(),settings:{...defaultSave().settings,sensitivity}}).settings.sensitivity).toBe(1);
+  });
   it('contains exactly six discoverable artifacts and three supported connections per gallery',()=>{for(const g of GALLERIES){expect(EVIDENCE.filter(e=>e.gallery===g.id)).toHaveLength(6);expect(CONNECTIONS.filter(c=>c.gallery===g.id)).toHaveLength(3);}for(const c of CONNECTIONS)expect(c.requires.every(id=>EVIDENCE.some(e=>e.id===id&&e.gallery===c.gallery))).toBe(true);});
 });
