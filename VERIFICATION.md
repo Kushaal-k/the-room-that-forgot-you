@@ -50,3 +50,13 @@ The Windows launcher now builds and opens production preview rather than the dev
 - Three fresh-player sessions and the 25–35 minute story duration.
 
 The application includes the implementation and test tools for these checks. Pending checks are not claimed as passed.
+
+## First-person horror update — 28 October 2026
+
+The exploration screen now uses a minimal HUD, a camera-following flashlight, nearby-object E interactions, physical door progression, and collision against benches, pedestals and room boundaries. The journal no longer collects unexamined exhibits remotely. Short authored observations precede optional complete transcripts. Rain, dust, directional creaks, footsteps, timed slow light dips and distant silhouettes add atmosphere; reduced motion disables movement and visual haunting effects.
+
+All **14 automated tests** passed, including proximity/facing checks, locked-door labels, collision boundaries, non-finite settings recovery and rejected out-of-order gallery progress. The production TypeScript/Vite/PWA build passed.
+
+Browser checks on the local development origin verified flashlight toggling, a clear exploration HUD, keyboard movement around furniture, the nearby return-ticket prompt, E inspection, collection, disabled unexamined journal entries, and preservation of the collected ticket after reload. Shift+Tab remained inside the pause dialog and Escape dismissed it. The short inspection and complete-record disclosure were inspected visually. This is a targeted regression check, not another full three-gallery playthrough.
+
+The AI worker was unchanged in this pass. The prior model evaluation remains the latest measured inference result. Fresh-player timing, prolonged performance, and a fully disconnected model investigation remain pending. The included two-minute video shows the previous presentation and is not an updated recording of this horror pass.

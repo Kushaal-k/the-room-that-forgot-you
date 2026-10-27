@@ -46,3 +46,7 @@
 .pause-save-status{font-size:10px;color:#92a18a;margin:18px 0!important}.extras-details{border-top:1px solid var(--line);padding:16px 0;font-size:10px;color:#8f9e87}.extras-details summary{cursor:pointer}.extras-details>.muted{font-size:10px;margin-top:16px}.extras-details .text-button{margin-top:16px}
 .reduced-motion .game-controls-hint{animation:none;opacity:.85}.reduced-motion .room-arrival{animation:none;display:none}
 @media(prefers-reduced-motion:reduce){.game-controls-hint{display:flex;animation:none;opacity:.85}}
+/* A short inspection first; the original transcript stays one deliberate click away. */
+.evidence-sheet .document-object{height:105px;margin:16px 0 22px;padding:17px 22px}.evidence-sheet .document-object>span:first-child{display:none}.evidence-sheet .document-rule{margin:12px 0}.evidence-sheet .document-stamp{font-size:6px;top:12px;padding:5px}.evidence-sheet h2{font-size:32px}.evidence-sheet .evidence-text{font-size:23px;line-height:1.45!important;margin:18px 0!important}.full-record{border-top:1px solid var(--line);margin:0 0 24px;padding-top:14px;font-size:10px;color:#a6b298}.full-record summary{cursor:pointer;color:#bba77f}.full-record p{margin-top:14px;font:19px/1.6 var(--serif);color:#b9c3ab}
+.mode-intro{min-height:0}.mode-play .scene{cursor:crosshair}
+@media(max-height:650px){.mode-intro .hero{top:23%}.mode-intro .hero h1{font-size:64px}.mode-intro .hero-description{font-size:18px;margin-top:16px}.mode-intro .hero-actions{margin-top:18px}.mode-intro .hero-details{display:none}.mode-intro .intro-footer{bottom:18px}}

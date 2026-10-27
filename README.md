@@ -2,7 +2,7 @@
 
 **A museum remembers everything. Except the person who kept it alive.**
 
-A complete fictional mystery across three atmospheric 3D galleries. Collect eighteen records, investigate nine connections, and restore the name of Greyhaven station's overlooked caretaker. A local open-weight archivist helps interpret the surviving evidence.
+A first-person mystery across three atmospheric 3D galleries, with a flashlight, nearby-object interactions, and a deliberately quiet HUD. Collect eighteen records, investigate nine connections, and restore the name of Greyhaven station's overlooked caretaker. A local open-weight archivist helps interpret the surviving evidence.
 
 ## Run locally
 
@@ -31,13 +31,16 @@ Use the production preview at `http://127.0.0.1:4173/` for model evaluation and 
 
 ## Investigate
 
-- **W A S D** or **↑ ↓**: move. **← →**: turn. Click empty hall space to look with the mouse; **Esc** releases it.
-- Click a glowing **+**, read the record, then choose **Keep this fragment**.
-- **J** opens field notes. Every exhibit is also accessible here using ordinary keyboard navigation.
-- **R** opens the archivist. Explicitly download the model to enable real inference.
+- **W A S D** or **↑ ↓**: move. **← →**: turn. Click the hall to look with the mouse; **Esc** releases it and opens the pause menu.
+- **F** toggles the flashlight. Approach an object, face it, and press **E** (or click the contextual prompt) to inspect it. Furniture and displays block movement.
+- **Keep record** adds the object to your field notes. A short observation appears first; **Read the complete record** opens the original transcript.
+- **J** opens collected records and the connection board. Unexamined exhibits must be found in the hall.
+- **R** opens the receiver. Explicitly download the models to enable real inference.
 - In **Make a connection**, choose a question and independently supporting records, then test it. Wrong theories do not remove progress.
-- Three connections restore each gallery. The final gallery opens Ada's workroom.
-- Settings include volume, reduced motion, captions and mouse sensitivity. Progress saves in IndexedDB on this browser and origin.
+- Three connections unlock the door at the far end. Approach it and press **E** to enter the next gallery; the final door leads to the workroom.
+- The exploration HUD is minimal. Controls fade after the first few seconds; pause provides a complete controls guide. Captions appear only with environmental events.
+- Footsteps, directional creaks, distant knocks, slow light dips, and brief silhouettes build suspense. Restoration brings warmth back. Reduced motion disables the light dips, silhouettes, camera bob, and moving rain/dust.
+- Pause settings include volume, reduced motion, captions and mouse sensitivity. Progress saves in IndexedDB on this browser and origin. Save writes are ordered; a failed initial read cannot silently overwrite existing progress.
 
 ## What the AI actually does
 
@@ -66,7 +69,7 @@ Open `/evaluate` on the production server. This developer-only page exposes stor
 
 ## Walkthrough and demo
 
-**Watch the walkthrough** plays the included two-minute recorded visual synopsis without modifying your save. Settings → **Export walkthrough video** can record the canvas plus a caption track into a new WebM download. Duration metadata is repaired for seeking. On the local preview, its fixed-path export middleware also saves the recording to `public/walkthrough.webm`; that middleware is not deployed. Keep the tab foregrounded for a faithful recording. The demonstration is silent, with visible captions; it does not represent live model inference.
+**Watch the walkthrough** plays the included two-minute recorded visual synopsis of the original presentation (before the first-person horror update) without modifying your save. Settings → **Export walkthrough video** can record the canvas plus a caption track into a new WebM download. Duration metadata is repaired for seeking. On the local preview, its fixed-path export middleware also saves the recording to `public/walkthrough.webm`; that middleware is not deployed. Keep the tab foregrounded for a faithful recording. The demonstration is silent, with visible captions; it does not represent live model inference.
 
 ## Architecture
 

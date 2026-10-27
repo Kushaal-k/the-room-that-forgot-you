@@ -22,7 +22,7 @@ function labelTexture(text: string, small?: string, dark = false) {
 }
 function Label({ text, small, position, width = 2.5, dark = false, rotation }: { text: string; small?: string; position: V3; width?: number; dark?: boolean; rotation?: V3 }) {
   const texture = useMemo(() => labelTexture(text,small,dark),[text,small,dark]); useEffect(()=>()=>texture.dispose(),[texture]);
-  return <mesh position={position} rotation={rotation}><planeGeometry args={[width,width/4]}/><meshBasicMaterial map={texture}/></mesh>;
+  return <mesh position={position} rotation={rotation}><planeGeometry args={[width,width/4]}/><meshStandardMaterial map={texture} roughness={.85}/></mesh>;
 }
 function Arch({ width, height, depth = .15, color = '#3d4a40' }: { width: number; height: number; depth?: number; color?: string }) {
   const shape = useMemo(() => {
@@ -71,7 +71,7 @@ function Artifact({ evidence, found, active, onInspect }: { evidence: Evidence; 
     <group position={[0,1.25,0]}>
       {evidence.prop === 'cup' ? <Cup position={[0,.04,0]}/> : evidence.prop === 'clock' ? <group rotation={[-.25,0,0]}><mesh><torusGeometry args={[.14,.035,10,24]}/><meshStandardMaterial color="#b79d66" metalness={.65}/></mesh><Box position={[.19,0,0]} args={[.25,.035,.035]} color="#b79d66"/><Box position={[.29,-.04,0]} args={[.035,.1,.035]} color="#b79d66"/></group> : <group rotation={[-.22,0,.07]}><Box position={[0,0,0]} args={[.48,evidence.prop === 'ledger' ? .09 : .015,.35]} color={evidence.prop === 'ledger' ? '#5c5040' : evidence.prop === 'photo' ? '#8b8980' : '#c1b28f'}/><Box position={[0,.05,0]} args={[.32,.006,.22]} color={evidence.prop === 'photo' ? '#465852' : '#b6a78a'}/></group>}
     </group>
-    <mesh position={[0,1.45,0]} onClick={e=>{e.stopPropagation();if(active)onInspect(evidence.id);}}><boxGeometry args={[1.25,1.6,1.1]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
+    <mesh position={[0,1.45,0]} onClick={active?e=>{e.stopPropagation();onInspect(evidence.id);}:undefined}><boxGeometry args={[1.25,1.6,1.1]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
     <Label text={evidence.id.toUpperCase()} position={[0,.9,.36]} width={.45}/>
 
     {!found && <pointLight position={[0,1.7,0]} color="#ccae75" intensity={.35} distance={2}/>}

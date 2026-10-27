@@ -27,6 +27,27 @@ export const EVIDENCE: Evidence[] = [
   { id: 'n5', gallery: 'names', title: 'A small brass key', kind: 'Personal effect', date: '1951–1981', prop: 'clock', position: [-1.0, 1.05, -5.7], inscription: 'THE ROOM AT THE BACK', text: 'A tag attached to the key reads: “A. Vale — back office. Please leave this room as she kept it. There is no need to make it grand.” It fits the modest door beyond the last gallery. The original inventory names a desk, a chair, a clock, a kettle, and a blue cup.' },
   { id: 'n6', gallery: 'names', title: 'Elsie’s last letter', kind: 'Personal correspondence', date: 'May 1981', prop: 'letter', position: [1.3, 1.05, -5.7], inscription: 'SHE WAS HERE', text: '“Ada never thought any of it was remarkable. If you make a museum, please leave something of the work. The clock she repaired. The cup she washed. The lamp she lit. Put her name somewhere small, where someone will actually stop and read it. That is enough. She was here.” — Elsie Vale.' },
 ];
+// Brief observations keep inspection readable; the complete authored record is always available.
+export const OBSERVATIONS: Record<string, string> = {
+  d1: 'A return ticket, punched at Greyhaven. On the reverse: “Back before the frost. Leave the small key under the blue cup.”',
+  d2: 'Six winters. Six arrivals. Each entry bears the same initials: A.V. The museum label calls it an abandonment register.',
+  d3: 'An unstamped letter: “There is a clock that stops in winter and a roof that will not mend itself. I will come back before the frost.”',
+  d4: 'The keeper paid for a new clock spring personally. A note explains: “People on the hill still set their kitchen clocks by it.”',
+  d5: '“Light at dusk. Do not extinguish until the last person from the hill has passed the crossing.” The timetable has been crossed out.',
+  d6: 'A postcard from Ruth Hale: “My father saw it from the hill and knew where the crossing was. Thank you for staying.”',
+  s1: 'A flood warning directs neighbours uphill. The station caretaker has agreed to open the waiting room through the night.',
+  s2: 'Names fill the margins. A blanket and a hot drink beside each. The last line reads: “Twenty-two safe. Make room for one more.”',
+  s3: '“Knock three times on the east shutter. Wait for two knocks from inside. We will bring the handcart.”',
+  s4: 'A child remembers three knocks, then two in reply. A woman came through the rain with a handcart. He never learned her name.',
+  s5: 'A chipped blue cup. Inside it: “Tea first. Questions later. No one needs to explain why they came.”',
+  s6: 'Two tables, six chairs, a kettle. “Tables used as beds for the children; chairs made a dry place for their shoes.” All returned with thanks.',
+  n1: 'Edwin March’s name covers the plaque. His donation funded the exhibition in 1984 — ten years after the flood.',
+  n2: '“Ada Vale appointed caretaker, 12 April 1951.” Keys. Waiting room. Clock. East crossing lamp. Signed A. Vale.',
+  n3: 'A woman drying cups beside the window. On the reverse: “Ada, after everyone had gone home. February 1974.”',
+  n4: 'Below the official signature: “Building opened by A. Vale before instructions arrived.” The museum copy omitted the pencilled line.',
+  n5: 'The key’s tag reads: “A. Vale — back office. Please leave this room as she kept it. There is no need to make it grand.”',
+  n6: 'Elsie’s letter asks for the clock, cup and lamp to remain. “Put her name somewhere small, where someone will actually stop and read it.”',
+};
 export const CONNECTIONS: Connection[] = [
   { id: 'returns', gallery: 'departures', title: 'A return, not a farewell', question: 'Did the keeper really leave for good?', requires: ['d1', 'd2'], truth: 'The return ticket and winter register establish that A.V. returned to Greyhaven each winter, even after passenger service ended.', restoration: 'The departure board turns. For the first time, it reads ARRIVALS.' },
   { id: 'clock', gallery: 'departures', title: 'Time for the town', question: 'Why repair a clock at a closed station?', requires: ['d3', 'd4'], truth: 'The keeper returned to maintain the station. The clock was repaired personally because neighbours still set their clocks by it.', restoration: 'The stopped clock begins to turn. A steady tick fills the hall.' },

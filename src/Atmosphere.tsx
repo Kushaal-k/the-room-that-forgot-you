@@ -4,6 +4,43 @@ import * as THREE from 'three';
 import type { GalleryId } from './story';
 
 export type Haunt = { caption: string; sound: 'creak' | 'knocks'; side: number };
+
+function RainAndDust({ reducedMotion }: { reducedMotion: boolean }) {
+  const rain = useRef<THREE.InstancedMesh>(null);
+  const dust = useRef<THREE.Points>(null);
+  const transform = useMemo(() => new THREE.Object3D(), []);
+  const positions = useMemo(() => {
+    const result = new Float32Array(100 * 3);
+    for (let i = 0; i < 100; i++) {
+      result[i * 3] = Math.sin(i * 127.1) * 4.6;
+      result[i * 3 + 1] = .5 + (Math.sin(i * 311.7) * .5 + .5) * 5;
+      result[i * 3 + 2] = Math.cos(i * 74.7) * 7;
+    }
+    return result;
+  }, []);
+  useFrame(({ clock }) => {
+    const time = reducedMotion ? 0 : clock.elapsedTime;
+    if (rain.current) {
+      for (let i = 0; i < 54; i++) {
+        const window = Math.floor(i / 18);
+        const phase = (i * 1.719 + time * (1.1 + i % 3 * .18)) % 4.3;
+        transform.position.set(-5.16, 5.2 - phase, -5 + window * 5 + (i % 6 - 2.5) * .39);
+        transform.rotation.set(0, Math.PI / 2, -.12);
+        transform.updateMatrix();
+        rain.current.setMatrixAt(i, transform.matrix);
+      }
+      rain.current.instanceMatrix.needsUpdate = true;
+    }
+    if (dust.current) dust.current.rotation.y = Math.sin(time * .012) * .05;
+  });
+  return <>
+    <instancedMesh ref={rain} args={[undefined, undefined, 54]} frustumCulled={false}>
+      <planeGeometry args={[.008, .38]}/><meshBasicMaterial color="#a3c1bc" transparent opacity={.23} depthWrite={false}/>
+    </instancedMesh>
+    <points ref={dust}><bufferGeometry><bufferAttribute attach="attributes-position" args={[positions, 3]}/></bufferGeometry>
+      <pointsMaterial color="#a4b4a0" size={.012} transparent opacity={.35} depthWrite={false}/></points>
+  </>;
+}
 export default function Atmosphere({ active, restored, reducedMotion, flashlight, gallery, onHaunt }: {
   active: boolean; restored: boolean; reducedMotion: boolean; flashlight: boolean;
   gallery: GalleryId; onHaunt: (event: Haunt) => void;
@@ -48,6 +85,7 @@ export default function Atmosphere({ active, restored, reducedMotion, flashlight
     }
   });
   return <>
+    <RainAndDust reducedMotion={reducedMotion}/>
     <primitive object={target}/>
     <spotLight ref={beam} target={target} color="#e9ddbd" angle={.39} penumbra={.78} distance={19} decay={1.7}/>
     <pointLight ref={bulb} position={[1, 4.9, -3]} color={restored ? '#f1c17e' : '#a8b5a0'} distance={13} decay={2}/>
