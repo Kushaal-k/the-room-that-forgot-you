@@ -6,6 +6,13 @@ A complete fictional mystery across three atmospheric 3D galleries. Collect eigh
 
 ## Run locally
 
+Clone the [GitHub repository](https://github.com/Kushaal-k/the-room-that-forgot-you) with an account that has access:
+
+```sh
+git clone https://github.com/Kushaal-k/the-room-that-forgot-you.git
+cd the-room-that-forgot-you
+```
+
 Requires Node.js 22.21+ and npm. On Windows, double-click **Start Museum.cmd**, or run:
 
 ```sh
