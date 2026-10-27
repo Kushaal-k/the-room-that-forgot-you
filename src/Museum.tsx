@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import Atmosphere from './Atmosphere';
+import { mouseLookDelta } from './controls';
 import type { Haunt } from './Atmosphere';
 import { isWalkable, nearbyInteraction } from './gameplay';
 import type { Interaction } from './gameplay';
@@ -131,10 +132,12 @@ function CameraRig({ exploring, blocked, reducedMotion, walkthrough, ended, sens
     };
     const up = (event: KeyboardEvent) => keys.current.delete(event.code);
     const move = (event: MouseEvent) => {
-      if (document.pointerLockElement === gl.domElement && !blocked) {
-        yaw.current -= event.movementX * .0016 * sensitivity;
-        pitch.current = Math.max(-.8, Math.min(.8, pitch.current - event.movementY * .0016 * sensitivity));
-      }
+      if (!exploring || blocked) return;
+      const delta = mouseLookDelta(document.pointerLockElement === gl.domElement, event.buttons,
+        !!(event.target as HTMLElement)?.closest('canvas, [data-mouse-look]'), event.movementX, event.movementY);
+      if (!delta) return;
+      yaw.current -= delta[0] * .0016 * sensitivity;
+      pitch.current = Math.max(-.8, Math.min(.8, pitch.current - delta[1] * .0016 * sensitivity));
     };
     const clear = () => keys.current.clear();
     window.addEventListener('keydown', down); window.addEventListener('keyup', up);
@@ -254,7 +257,7 @@ function Hall(props: Props) {
   </>;
 }
 export default function Museum(props: Props) {
-  return <Canvas className="museum-canvas" camera={{position:[3.8,3.6,10.5],fov:47,near:.1,far:55}} dpr={[1,1.5]} gl={{ antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance' }} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.32;gl.domElement.addEventListener('webglcontextlost',props.onFailure);}} onPointerMissed={(event)=>{ if(props.exploring&&!props.blocked&&!props.walkthrough&&event.type==='click') { const canvas=document.querySelector('canvas');canvas?.requestPointerLock()?.catch(()=>{}); } }}>
+  return <Canvas className="museum-canvas" camera={{position:[3.8,3.6,10.5],fov:47,near:.1,far:55}} dpr={[1,1.5]} gl={{ antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance' }} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.32;gl.domElement.addEventListener('webglcontextlost',props.onFailure);}}>
     <Suspense fallback={null}><Hall {...props}/></Suspense>
   </Canvas>;
 }
