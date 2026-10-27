@@ -1,12 +1,15 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import Atmosphere from './Atmosphere';
+import type { Haunt } from './Atmosphere';
+import { isWalkable, nearbyInteraction } from './gameplay';
+import type { Interaction } from './gameplay';
 import * as THREE from 'three';
 import { EVIDENCE, GALLERIES, isGalleryRestored } from './story';
 import type { Evidence, GalleryId } from './story';
 
 type V3 = [number, number, number];
-interface Props { gallery: GalleryId; confirmed: string[]; discovered: string[]; exploring: boolean; blocked: boolean; reducedMotion: boolean; busy: boolean; walkthrough: boolean; ended: boolean; sensitivity: number; onInspect: (id: string) => void; onReady: () => void; onFailure: () => void; onFps: (fps: number) => void; }
+interface Props { gallery: GalleryId; confirmed: string[]; discovered: string[]; exploring: boolean; blocked: boolean; reducedMotion: boolean; busy: boolean; walkthrough: boolean; ended: boolean; sensitivity: number; onInspect: (id: string) => void; onReady: () => void; onFailure: () => void; onFps: (fps: number) => void; flashlight: boolean; focusedId: string | null; onInteractionChange: (interaction: Interaction | null) => void; onEnterDoor: () => void; onFootstep: () => void; onHaunt: (event: Haunt) => void; }
 const palettes = { departures: { cold: '#78918c', tint: '#0c1e21' }, shelter: { cold: '#839b98', tint: '#102127' }, names: { cold: '#879186', tint: '#182322' } };
 function Box({ position, args, color, roughness = .65, metalness = 0 }: { position: V3; args: V3; color: string; roughness?: number; metalness?: number }) { return <mesh position={position} receiveShadow><boxGeometry args={args}/><meshStandardMaterial color={color} roughness={roughness} metalness={metalness}/></mesh>; }
 function labelTexture(text: string, small?: string, dark = false) {
@@ -70,7 +73,7 @@ function Artifact({ evidence, found, active, onInspect }: { evidence: Evidence; 
     </group>
     <mesh position={[0,1.45,0]} onClick={e=>{e.stopPropagation();if(active)onInspect(evidence.id);}}><boxGeometry args={[1.25,1.6,1.1]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
     <Label text={evidence.id.toUpperCase()} position={[0,.9,.36]} width={.45}/>
-    {active && <Html position={[0,1.85,0]} center distanceFactor={10} zIndexRange={[9,0]}><button className={`artifact-marker ${found?'found':''}`} onClick={()=>onInspect(evidence.id)} aria-label={`Inspect ${evidence.title}`} title={evidence.title}>{found ? '✓' : '+'}</button></Html>}
+
     {!found && <pointLight position={[0,1.7,0]} color="#ccae75" intensity={.35} distance={2}/>}
   </group>;
 }
@@ -99,36 +102,80 @@ function Workroom() {
     <Label text="ADA VALE" small="KEEPER OF GREYHAVEN · 1951—1981" position={[.4,1.8,-5.25]} width={1.9}/>
   </group>;
 }
-function CameraRig({ exploring, blocked, reducedMotion, walkthrough, ended, sensitivity, gallery }: Pick<Props,'exploring'|'blocked'|'reducedMotion'|'walkthrough'|'ended'|'sensitivity'|'gallery'>) {
+function CameraRig({ exploring, blocked, reducedMotion, walkthrough, ended, sensitivity, gallery, confirmed,
+  onInspect, onInteractionChange, onEnterDoor, onFootstep }: Props) {
   const { camera, gl } = useThree();
-  const keys = useRef(new Set<string>()); const yaw = useRef(0); const pitch = useRef(0); const started = useRef(false); const time = useRef(0);
-  useEffect(()=> { started.current=false; time.current=0; keys.current.clear(); },[exploring,gallery,walkthrough,ended]);
-  useEffect(()=> {
-    const down=(e:KeyboardEvent)=>{if(['INPUT','TEXTAREA'].includes((e.target as HTMLElement)?.tagName))return; if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)){e.preventDefault(); keys.current.add(e.code);}};
-    const up=(e:KeyboardEvent)=>keys.current.delete(e.code);
-    const move=(e:MouseEvent)=>{if(document.pointerLockElement===gl.domElement){yaw.current-=e.movementX*.0016*sensitivity;pitch.current=Math.max(-.6,Math.min(.65,pitch.current-e.movementY*.0016*sensitivity));}};
-    const clear=()=>keys.current.clear();
-    window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);window.addEventListener('mousemove',move);
-    return()=>{window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);window.removeEventListener('mousemove',move);};
-  },[gl,sensitivity]);
-  useFrame((_,dt)=> {
-    time.current+=dt;
-    if(!exploring || walkthrough){
+  const keys = useRef(new Set<string>());
+  const yaw = useRef(0), pitch = useRef(0), started = useRef(false), time = useRef(0);
+  const walked = useRef(0), stepDistance = useRef(0);
+  const focused = useRef<Interaction | null>(null);
+  const direction = useMemo(() => new THREE.Vector3(), []);
+  const forward = useMemo(() => new THREE.Vector3(), []);
+  useEffect(() => {
+    started.current = false; time.current = 0; keys.current.clear();
+    focused.current = null; onInteractionChange(null);
+  }, [exploring, gallery, walkthrough, ended, onInteractionChange]);
+  useEffect(() => { if (blocked) keys.current.clear(); }, [blocked]);
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      if (!exploring || blocked || event.ctrlKey || event.metaKey || event.altKey ||
+          (event.target as HTMLElement)?.closest('input, textarea, select, dialog')) return;
+      if (event.code === 'KeyE' && !event.repeat && focused.current) {
+        event.preventDefault();
+        if (focused.current.kind === 'door') onEnterDoor();
+        else onInspect(focused.current.id);
+      }
+      if (['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.code)) {
+        event.preventDefault(); keys.current.add(event.code);
+      }
+    };
+    const up = (event: KeyboardEvent) => keys.current.delete(event.code);
+    const move = (event: MouseEvent) => {
+      if (document.pointerLockElement === gl.domElement && !blocked) {
+        yaw.current -= event.movementX * .0016 * sensitivity;
+        pitch.current = Math.max(-.8, Math.min(.8, pitch.current - event.movementY * .0016 * sensitivity));
+      }
+    };
+    const clear = () => keys.current.clear();
+    window.addEventListener('keydown', down); window.addEventListener('keyup', up);
+    window.addEventListener('blur', clear); window.addEventListener('mousemove', move);
+    return () => {
+      window.removeEventListener('keydown', down); window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', clear); window.removeEventListener('mousemove', move);
+    };
+  }, [gl, sensitivity, exploring, blocked, onInspect, onEnterDoor]);
+  useFrame((_, delta) => {
+    const dt = Math.min(delta, .05);
+    time.current += dt;
+    if (!exploring || walkthrough) {
       const t = reducedMotion ? 0 : time.current;
       const desired = ended ? new THREE.Vector3(2.1,2.1,2.3) : new THREE.Vector3(3.8+Math.sin(t*.025)*.2,3.6,10.5);
-      camera.position.lerp(desired,Math.min(1,dt*1.7));camera.lookAt(ended?new THREE.Vector3(0,1.2,-3):new THREE.Vector3(-.25,2.1,-3.5));started.current=false;
+      camera.position.lerp(desired, Math.min(1,dt*1.7));
+      camera.lookAt(ended ? new THREE.Vector3(0,1.2,-3) : new THREE.Vector3(-.25,2.1,-3.5));
+      started.current = false;
       return;
     }
-    if(!started.current){camera.position.set(0,1.7,6.7);yaw.current=0;pitch.current=0;started.current=true;}
-    if(blocked)return;
-    const k=keys.current;
-    if(k.has('ArrowLeft'))yaw.current+=dt*1.4;
-    if(k.has('ArrowRight'))yaw.current-=dt*1.4;
-    const forward=Number(k.has('KeyW')||k.has('ArrowUp'))-Number(k.has('KeyS')||k.has('ArrowDown'));
-    const side=Number(k.has('KeyD'))-Number(k.has('KeyA'));
-    const direction=new THREE.Vector3(side,0,-forward).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw.current).multiplyScalar(Math.min(dt,.05)*2.5);
-    camera.position.add(direction);camera.position.x=THREE.MathUtils.clamp(camera.position.x,-4.5,4.5);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-6.8,7.7);
+    if (!started.current) { camera.position.set(0,1.7,6.7); yaw.current=0; pitch.current=0; started.current=true; }
+    if (blocked) return;
+    const k = keys.current;
+    if (k.has('ArrowLeft')) yaw.current += dt * 1.4;
+    if (k.has('ArrowRight')) yaw.current -= dt * 1.4;
+    const moving = Number(k.has('KeyW')||k.has('ArrowUp')) - Number(k.has('KeyS')||k.has('ArrowDown'));
+    const side = Number(k.has('KeyD')) - Number(k.has('KeyA'));
+    direction.set(side,0,-moving).normalize().applyAxisAngle(THREE.Object3D.DEFAULT_UP, yaw.current).multiplyScalar(dt*2.5);
+    const previousX=camera.position.x, previousZ=camera.position.z;
+    if (isWalkable(camera.position.x+direction.x,camera.position.z,gallery)) camera.position.x+=direction.x;
+    if (isWalkable(camera.position.x,camera.position.z+direction.z,gallery)) camera.position.z+=direction.z;
+    const distance=Math.hypot(camera.position.x-previousX,camera.position.z-previousZ);
+    walked.current+=distance; stepDistance.current+=distance;
+    if (stepDistance.current>.95) { stepDistance.current=0; onFootstep(); }
+    camera.position.y=1.7+(reducedMotion?0:Math.sin(walked.current*8)*.018);
     camera.rotation.set(pitch.current,yaw.current,0,'YXZ');
+    camera.getWorldDirection(forward);
+    const next=nearbyInteraction(camera.position.x,camera.position.z,forward.x,forward.z,gallery,isGalleryRestored(gallery,confirmed));
+    if(next?.id!==focused.current?.id||next?.label!==focused.current?.label) {
+      focused.current=next; onInteractionChange(next);
+    }
   });
   return null;
 }
@@ -148,7 +195,7 @@ function Hall(props: Props) {
   useEffect(()=> { onReady(); },[onReady]);
   useFrame((_,dt)=>{
     warmth.current=THREE.MathUtils.lerp(warmth.current,restored||ended?1:0,Math.min(1,dt*.5));
-    if(fill.current){fill.current.color.set(palette.cold).lerp(new THREE.Color('#e4c597'),warmth.current);fill.current.intensity=.95+warmth.current*.28;}
+    if(fill.current){fill.current.color.set(palette.cold).lerp(new THREE.Color('#e4c597'),warmth.current);fill.current.intensity=(exploring?.22:.95)+warmth.current*.65;}
     fps.current.time+=dt;fps.current.frames++;if(fps.current.time>2){onFps(Math.round(fps.current.frames/fps.current.time));fps.current={time:0,frames:0};}
   });
   const floorTexture=useMemo(()=>{
@@ -157,10 +204,10 @@ function Hall(props: Props) {
   useEffect(()=>()=>floorTexture.dispose(),[floorTexture]);
   return <>
     <color attach="background" args={[palette.tint]}/><fog attach="fog" args={[palette.tint,12,35]}/>
-    <ambientLight ref={fill} intensity={1.05}/><hemisphereLight args={['#bad5cd','#2e3425',1.5]}/>
-    <directionalLight position={[-8,9,-1]} intensity={2.1} color="#a1b9af"/>
-    <pointLight position={[1,5.4,1]} color={restored||ended?'#f1c17e':'#abb99a'} intensity={45} distance={17} decay={2}/>
-    <pointLight position={[-3,3,-5]} color="#d3b87a" intensity={restored?22:10} distance={10}/>
+    <ambientLight ref={fill} intensity={1.05}/><hemisphereLight args={['#bad5cd','#2e3425',exploring?.35:1.5]}/>
+    <directionalLight position={[-8,9,-1]} intensity={exploring?(restored?1.5:.5):2.1} color="#a1b9af"/>
+    <pointLight position={[1,5.4,1]} color={restored||ended?'#f1c17e':'#abb99a'} intensity={exploring?(restored?30:7):45} distance={17} decay={2}/>
+    <pointLight position={[-3,3,-5]} color="#d3b87a" intensity={restored?22:exploring?2:10} distance={10}/>
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.02,0]} receiveShadow><planeGeometry args={[11,20]}/><meshStandardMaterial map={floorTexture} roughness={.37} metalness={.27}/></mesh>
     {[-4.9,4.9].map(x=><Box key={x} position={[x,.005,0]} args={[.035,.012,20]} color="#8f8463" metalness={.4}/>)}
     <Box position={[0,3.1,-7.65]} args={[11,6.2,.35]} color="#3d4940"/>
@@ -193,7 +240,7 @@ function Hall(props: Props) {
       </>}
       <Bench position={[-1.8,0,3.4]} rotation={-.08} blankets={gallery==='shelter'&&confirmed.includes('refuge')} overturned={gallery==='shelter'&&!confirmed.includes('care')}/>
       <Bench position={[1.7,0,-1.1]} rotation={Math.PI+.04} blankets={gallery==='shelter'&&confirmed.includes('refuge')}/>
-      {EVIDENCE.filter(e=>e.gallery===gallery).map(e=><Artifact key={e.id} evidence={e} found={discovered.includes(e.id)} active={exploring&&!blocked&&!walkthrough} onInspect={onInspect}/>)}
+      {EVIDENCE.filter(e=>e.gallery===gallery).map(e=><Artifact key={e.id} evidence={e} found={discovered.includes(e.id)} active={exploring&&!blocked&&!walkthrough&&props.focusedId===e.id} onInspect={onInspect}/>)}
       {[0,1].map(i=><group key={i} position={[5.26,2.8,-2-i*3.2]} rotation={[0,-Math.PI/2,0]}><Box position={[0,0,0]} args={[1.7,2.15,.1]} color="#807252" metalness={.4}/><Box position={[0,0,.07]} args={[1.47,1.92,.04]} color={gallery==='names'&&confirmed.includes('identity')?'#817b65':'#263d36'}/>{gallery==='names'&&confirmed.includes('identity')&&<group position={[0,0,.11]}><mesh position={[0,.4,0]}><circleGeometry args={[.24,20]}/><meshBasicMaterial color="#aca28a"/></mesh><mesh position={[0,-.2,0]}><planeGeometry args={[.65,.8]}/><meshBasicMaterial color="#48514a"/></mesh></group>}<Label text={i===0?(gallery==='names'&&confirmed.includes('identity')?'ADA VALE':'UNTITLED'):'THE EAST CROSSING'} position={[0,-1.25,.08]} width={1.6}/></group>)}
       {gallery==='names'&&<Label text={confirmed.includes('credit')?'ADA VALE · SHE KEPT THE DOORS OPEN':'THE GIFT OF COUNCILLOR EDWIN MARCH'} small={confirmed.includes('credit')?'EXHIBITION FUNDED BY EDWIN MARCH · 1984':'THE GREYHAVEN FLOOD COLLECTION · 1984'} position={[0,1.8,-7.1]} width={2.15}/>}
     </>}
@@ -202,6 +249,7 @@ function Hall(props: Props) {
     <Label text={GALLERIES.find(g=>g.id===gallery)!.title.toUpperCase()} position={[0,2.8,-7.1]} width={1.8}/>
     {[0,1,2].map(i=><mesh key={i} position={[-2+i*1.7,5.1,5-i*4]}><sphereGeometry args={[.09,12,8]}/><meshBasicMaterial color="#e7ce96"/></mesh>)}
     <CameraRig {...props}/>
+    <Atmosphere active={exploring&&!blocked&&!walkthrough} restored={restored||ended} reducedMotion={props.reducedMotion} flashlight={props.flashlight} gallery={gallery} onHaunt={props.onHaunt}/>
     <FrameBudget busy={props.busy}/>
   </>;
 }

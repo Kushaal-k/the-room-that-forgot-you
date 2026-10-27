@@ -23,3 +23,26 @@
 .dialog-shell.wide{width:880px}.dialog-shell::backdrop{background:#07100ed9;backdrop-filter:blur(8px)}
 .dialog-shell .modal{width:100%;max-height:calc(100svh - 40px)}
 @media(max-width:740px){.dialog-shell{max-width:calc(100vw - 24px);max-height:calc(100svh - 24px)}.dialog-shell .modal{max-height:calc(100svh - 24px)}}
+/* Exploration leaves the room in charge of the screen. */
+.mode-play{min-height:0;height:100svh}.mode-play .atmosphere{background:radial-gradient(ellipse at 50% 48%,transparent 25%,#02070770 100%)}
+.mode-play .film-grain{opacity:.075}.mode-intro .hero{top:28%}.mode-intro .hero h1{font-size:clamp(74px,7.6vw,112px)}
+.mode-intro .hero-description{font-family:var(--serif);font-size:23px;line-height:1.5;color:#b6b7a5}.mode-intro .hero-details{font-size:9px;opacity:.6}
+.mode-intro .hero-actions .primary{background:#c4b08b;color:#14201b;border-color:#c4b08b}.mode-intro .hero-actions{gap:24px}
+.mode-play .crosshair{height:3px;width:3px;background:#e8e1cb80;border:0;opacity:.7;box-shadow:none;border-radius:50%;z-index:5}.mode-play .crosshair.has-target{height:6px;width:6px;background:#f3e3bb;box-shadow:0 0 8px #e3cfa255}
+.room-arrival{position:absolute;left:50%;top:16%;transform:translateX(-50%);text-align:center;pointer-events:none;animation:room-arrival 6s both;color:#d4d5c8;text-shadow:0 2px 20px #000;z-index:5}
+.room-arrival>span{font-size:9px;letter-spacing:5px;opacity:.6}.room-arrival h1{font-size:38px;letter-spacing:4px;margin-top:9px}
+@keyframes room-arrival{0%,100%{opacity:0}12%,60%{opacity:1}}
+.interact-prompt{position:absolute;bottom:15%;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;color:#dfded1;z-index:8;background:#0c1212b8;padding:11px 17px;border:1px solid #b3bba221;font-size:12px;letter-spacing:.4px;backdrop-filter:blur(5px)}
+.interact-prompt kbd{border:1px solid #c3c8b255;border-radius:3px;padding:4px 7px;font:10px 'DM Sans',sans-serif}.interact-prompt small{font-size:10px;color:#aaa993;border-left:1px solid #aab19a44;padding-left:12px}
+.pause-button{position:absolute;top:27px;right:28px;z-index:8;opacity:.4;padding:12px}.pause-button:hover,.pause-button:focus-visible{opacity:1}
+.pocket-tools{position:absolute;right:30px;bottom:25px;display:flex;gap:8px;z-index:8;opacity:.42;transition:opacity .2s}.pocket-tools:hover,.pocket-tools:focus-within{opacity:1}.pocket-tools button{width:35px;height:36px;display:grid;place-items:center;color:#cad1bd}.pocket-tools button[aria-pressed=false]{opacity:.35}.flashlight-symbol{font-size:22px}
+.game-controls-hint{position:absolute;bottom:32px;left:32px;display:flex;gap:21px;font-size:9px;letter-spacing:.5px;color:#c4c6b5;animation:controls-fade 12s forwards;pointer-events:none;z-index:5}.game-controls-hint small{margin-left:6px;color:#929c89;font-size:9px}
+@keyframes controls-fade{0%{opacity:0}7%,70%{opacity:.8}100%{opacity:0;visibility:hidden}}
+.environment-caption{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);background:#07100ec4;color:#c2c6b6;font-size:11px;letter-spacing:.3px;padding:7px 14px;max-width:80%;text-align:center;pointer-events:none;z-index:7}
+.mode-play .toast{font:12px/1.7 'DM Sans',sans-serif;letter-spacing:.3px;padding:10px 17px;bottom:auto;top:30px;max-width:65%;border:0;background:#07100ec9;box-shadow:none;pointer-events:none}.mode-play .toast .tiny-line{display:none}
+.fragment-card:disabled{opacity:.5;background:transparent;border-style:dashed}.fragment-card:disabled h3{font-size:20px;color:#7f917e}
+@media(max-width:740px){.mode-intro .hero{top:27%}.mode-intro .hero h1{font-size:75px}.mode-intro .hero-description{font-size:20px}.mode-intro .hero-actions{align-items:flex-start;flex-direction:column;gap:18px}.mode-intro .intro-footer>span{font-size:6px}.room-arrival h1{font-size:30px}.game-controls-hint{left:20px;right:20px;bottom:80px;flex-wrap:wrap;gap:12px}.pocket-tools{right:15px;bottom:18px}.interact-prompt{max-width:90%;white-space:nowrap;bottom:19%;padding:10px 12px}.interact-prompt small{white-space:normal;max-width:140px}.mode-play .toast{max-width:85%;font-size:10px}.environment-caption{font-size:10px;max-width:90%;bottom:10%}}
+@media(prefers-reduced-motion:reduce){.room-arrival,.game-controls-hint{animation-duration:.01ms;animation-fill-mode:forwards}.room-arrival{display:none}.game-controls-hint{display:none}}
+.pause-save-status{font-size:10px;color:#92a18a;margin:18px 0!important}.extras-details{border-top:1px solid var(--line);padding:16px 0;font-size:10px;color:#8f9e87}.extras-details summary{cursor:pointer}.extras-details>.muted{font-size:10px;margin-top:16px}.extras-details .text-button{margin-top:16px}
+.reduced-motion .game-controls-hint{animation:none;opacity:.85}.reduced-motion .room-arrival{animation:none;display:none}
+@media(prefers-reduced-motion:reduce){.game-controls-hint{display:flex;animation:none;opacity:.85}}
